@@ -1,45 +1,39 @@
 import { useMemo, useState } from "react";
 import { useWindowWidth } from "../../../../../app/hooks/useWindowWidth";
 import { useDashboard } from "../DashboardContext/useDashboard";
-import { useQuery } from "@tanstack/react-query";
-import { bankAccountService } from "../../../../../app/services/bankAccountsService";
+import { useBankAccounts } from "../../../../../app/hooks/useBankAccounts";
 
 export function useAccountsController() {
-    const windowWidth = useWindowWidth();
+  const windowWidth = useWindowWidth();
 
-    const { areValuesVisible, toggleValuesVisibility, openNewAccountModal } =
-        useDashboard();
+  const { areValuesVisible, toggleValuesVisibility, openNewAccountModal } =
+    useDashboard();
 
-    const [sliderState, setSliderState] = useState<{
-        isBeginning: boolean;
-        isEnd: boolean;
-    }>({
-        isBeginning: true,
-        isEnd: false,
-    });
+  const [sliderState, setSliderState] = useState<{
+    isBeginning: boolean;
+    isEnd: boolean;
+  }>({
+    isBeginning: true,
+    isEnd: false,
+  });
 
-    const { data, isFetching } = useQuery({
-        queryKey: ["bankAccounts"],
-        queryFn: () => bankAccountService.getAll(),
-    });
+  const { accounts, isFetching } = useBankAccounts();
 
-    const currentBalance = useMemo(() => {
-        if (!data) return 0;
+  const currentBalance = useMemo(() => {
+    return accounts.reduce((total, account) => {
+      return total + account.currentBalance;
+    }, 0);
+  }, [accounts]);
 
-        return data.reduce((total, account) => {
-            return total + account.currentBalance;
-        }, 0);
-    }, [data]);
-
-    return {
-        sliderState,
-        setSliderState,
-        windowWidth,
-        areValuesVisible,
-        toggleValuesVisibility,
-        isLoading: isFetching,
-        accounts: data ?? [],
-        openNewAccountModal,
-        currentBalance,
-    };
+  return {
+    sliderState,
+    setSliderState,
+    windowWidth,
+    areValuesVisible,
+    toggleValuesVisibility,
+    isLoading: isFetching,
+    accounts,
+    openNewAccountModal,
+    currentBalance,
+  };
 }
