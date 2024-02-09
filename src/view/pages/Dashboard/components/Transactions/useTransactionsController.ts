@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { useDashboard } from "../DashboardContext/useDashboard";
 import { useTransactions } from "../../../../../app/hooks/useTransactions";
 import { TransactionsFilters } from "../../../../../app/services/transactionsService/getAll";
+import { Transaction } from "../../../../../app/entities/Transaction";
 
 export function useTransactionsController() {
   const { areValuesVisible } = useDashboard();
 
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [transactionBeingEdited, setTransactionBeingEdited] =
+    useState<null | Transaction>(null);
 
   const [filters, setFilters] = useState<TransactionsFilters>({
     month: new Date().getMonth(),
@@ -53,6 +57,16 @@ export function useTransactionsController() {
     setIsFiltersModalOpen(false);
   }
 
+  function handleOpenEditModal(transaction: Transaction) {
+    setIsEditModalOpen(true);
+    setTransactionBeingEdited(transaction);
+  }
+
+  function handleCloseEditModal() {
+    setIsEditModalOpen(false);
+    setTransactionBeingEdited(null);
+  }
+
   return {
     areValuesVisible,
     transactions,
@@ -64,5 +78,9 @@ export function useTransactionsController() {
     handleChangeFilters,
     filters,
     handleApplyFilters,
+    isEditModalOpen,
+    transactionBeingEdited,
+    handleOpenEditModal,
+    handleCloseEditModal,
   };
 }
