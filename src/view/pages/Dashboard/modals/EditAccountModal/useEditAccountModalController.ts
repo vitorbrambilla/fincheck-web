@@ -84,7 +84,6 @@ export function useEditAccountModalController() {
 
       closeEditAccountModal();
       toast.success("A conta foi deletada com sucesso!");
-      closeEditAccountModal();
     } catch {
       toast.error("Erro ao deletar as alterações!");
     }
