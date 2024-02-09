@@ -6,71 +6,103 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { bankAccountService } from "../../../../../app/services/bankAccountsService";
 import { currencyStringToNumber } from "../../../../../app/utils/currencyStringToNumber";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 const schema = z.object({
-    initialBalance: z.union([
-        z.string().nonempty("Saldo inicial é obrigatório"),
-        z.number(),
-    ]),
-    name: z.string().nonempty("Nome da Conta é obrigatório"),
-    type: z.enum(["CHECKING", "INVESTMENT", "CASH"]),
-    color: z.string().nonempty("Cor é obrigatória"),
+  initialBalance: z.union([
+    z.string().nonempty("Saldo inicial é obrigatório"),
+    z.number(),
+  ]),
+  name: z.string().nonempty("Nome da Conta é obrigatório"),
+  type: z.enum(["CHECKING", "INVESTMENT", "CASH"]),
+  color: z.string().nonempty("Cor é obrigatória"),
 });
 
 type FormData = z.infer<typeof schema>;
 
 export function useEditAccountModalController() {
-    const {
-        isEditAccountModalOpen,
-        closeEditAccountModal,
-        accountBeingEdited,
-    } = useDashboard();
+  const { isEditAccountModalOpen, closeEditAccountModal, accountBeingEdited } =
+    useDashboard();
 
-    const {
-        register,
-        handleSubmit: hookFormSubmit,
-        formState: { errors },
-        control,
-    } = useForm<FormData>({
-        resolver: zodResolver(schema),
-        defaultValues: {
-            color: accountBeingEdited?.color,
-            name: accountBeingEdited?.name,
-            type: accountBeingEdited?.type,
-            initialBalance: accountBeingEdited?.initialBalance,
-        },
-    });
+  const {
+    register,
+    handleSubmit: hookFormSubmit,
+    formState: { errors },
+    control,
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      color: accountBeingEdited?.color,
+      name: accountBeingEdited?.name,
+      type: accountBeingEdited?.type,
+      initialBalance: accountBeingEdited?.initialBalance,
+    },
+  });
 
-    const queryClient = useQueryClient();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-    const { isLoading, mutateAsync } = useMutation(bankAccountService.update);
+  const queryClient = useQueryClient();
 
-    const handleSubmit = hookFormSubmit(async (data) => {
-        try {
-            await mutateAsync({
-                ...data,
-                initialBalance: currencyStringToNumber(data.initialBalance),
-                id: accountBeingEdited!.id,
-            });
+  const { isLoading, mutateAsync: updateAccount } = useMutation(
+    bankAccountService.update
+  );
 
-            queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
+  const { isLoading: isLoadingDelete, mutateAsync: removeAccount } =
+    useMutation(bankAccountService.remove);
 
-            closeEditAccountModal();
-            toast.success("A conta foi editada com sucesso!");
-            closeEditAccountModal();
-        } catch {
-            toast.error("Erro ao salvar as alterações!");
-        }
-    });
+  const handleSubmit = hookFormSubmit(async (data) => {
+    try {
+      await updateAccount({
+        ...data,
+        initialBalance: currencyStringToNumber(data.initialBalance),
+        id: accountBeingEdited!.id,
+      });
 
-    return {
-        isEditAccountModalOpen,
-        closeEditAccountModal,
-        register,
-        control,
-        errors,
-        handleSubmit,
-        isLoading,
-        accountBeingEdited,
-    };
+      queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
+
+      closeEditAccountModal();
+      toast.success("A conta foi editada com sucesso!");
+      closeEditAccountModal();
+    } catch {
+      toast.error("Erro ao salvar as alterações!");
+    }
+  });
+
+  function handleOpenDeleteModal() {
+    setIsDeleteModalOpen(true);
+  }
+
+  function handleCloseDeleteModal() {
+    setIsDeleteModalOpen(false);
+  }
+
+  async function handleDeleteAccount() {
+    try {
+      await removeAccount(accountBeingEdited!.id);
+
+      queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
+
+      closeEditAccountModal();
+      toast.success("A conta foi deletada com sucesso!");
+      closeEditAccountModal();
+    } catch {
+      toast.error("Erro ao deletar as alterações!");
+    }
+  }
+
+  return {
+    isEditAccountModalOpen,
+    closeEditAccountModal,
+    register,
+    control,
+    errors,
+    handleSubmit,
+    isLoading,
+    accountBeingEdited,
+    isDeleteModalOpen,
+    handleOpenDeleteModal,
+    handleCloseDeleteModal,
+    handleDeleteAccount,
+    isLoadingDelete,
+  };
 }

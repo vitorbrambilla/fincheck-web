@@ -3,28 +3,33 @@ import { cn } from "../../app/utils/cn";
 import { Spinner } from "./Spinner";
 
 interface ButtonProps extends ComponentProps<"button"> {
-    isLoading?: boolean;
+  isLoading?: boolean;
+  variant?: "danger" | "ghost";
 }
 
 export function Button({
-    className,
-    isLoading,
-    disabled,
-    children,
-    ...props
+  className,
+  isLoading,
+  disabled,
+  children,
+  variant,
+  ...props
 }: ButtonProps) {
-    return (
-        <button
-            {...props}
-            disabled={disabled || isLoading}
-            className={cn(
-                "flex items-center justify-center bg-teal-900 hover:bg-teal-800 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed px-6 h-12 rounded-2xl text-white font-medium transition-all",
-                className
-            )}
-        >
-            {!isLoading && children}
+  return (
+    <button
+      {...props}
+      disabled={disabled || isLoading}
+      className={cn(
+        "flex items-center justify-center bg-teal-900 hover:bg-teal-800 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed px-6 h-12 rounded-2xl text-white font-medium transition-all",
+        variant === "danger" && "bg-red-900 hover:bg-red-800",
+        variant === "ghost" &&
+          "bg-transparent border border-gray-800 text-gray-800 hover:bg-gray-800/5",
+        className
+      )}
+    >
+      {!isLoading && children}
 
-            {isLoading && <Spinner className="w-6 h-6" />}
-        </button>
-    );
+      {isLoading && <Spinner className="w-6 h-6" />}
+    </button>
+  );
 }
